@@ -31,5 +31,5 @@ def discover_documents(folder_path):
     return discovered_documents
 
 if __name__ == "__main__":
-    results = discover_documents(".")
+    results = discover_documents("example_documents")
     print(results)
