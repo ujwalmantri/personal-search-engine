@@ -30,15 +30,34 @@ Sparked by a Data Structures & Algorithms course assignment on searching and sor
 
 No text extraction, indexing, or search functionality exists yet.
 
+**Day 2 — Text Extraction**
+
+- Reads the raw text content of a given file
+- Correctly handles missing files and directories
+- Raises a clear, custom error when a file can't be decoded as text
+- fully covered by an automated test suite
+
+No indexing or search functionality exists yet. Discovery and extraction are not yet connected into a single pipeline.
+
 ## Architecture
 
-Day 1 is intentionally simple: a single function, `discover_documents(folder_path)`, that:
+## Architecture
+
+Day 1 built a single function, `discover_documents(folder_path)`, that:
 
 1. Validates the given path exists and is a directory
 2. Recursively walks the directory
 3. Filters for supported file extensions
 4. Collects metadata into a dictionary per file
 5. Returns a list of these dictionaries
+
+Day 2 added a second, independent function, `extract_text(file_path)`, that:
+
+1. Reads a file's full text content
+2. Relies on Python's built-in file-reading errors for missing files/directories
+3. Raises a clear error if the file can't be decoded as text
+
+These two functions are not yet connected — that's planned for the next stage.
 
 No classes, no external frameworks — just plain functions and Python's standard library.
 
@@ -54,8 +73,10 @@ personal-search-engine/
 ├── .gitignore              # Files/folders Git should not track
 ├── requirements.txt        # Python package dependencies
 ├── discover.py             # Document discovery logic
+├── extract.py              # Text extraction logic
 ├── test_discover.py        # Automated tests for discover.py
-└── example_documents/      # Sample files used to demo discover.py
+├── test_extract.py         # Automated tests for extract.py
+└── example_documents/      # Sample files used to demo discover.py / extract.py
 ```
 
 ## Setup
@@ -93,32 +114,41 @@ To scan a different folder, edit the folder path passed to `discover_documents()
 
 ## Testing
 
-Run the test suite with:
+Run the full test suite with:
 
 ```bash
 pytest
 ```
 
 Tests cover:
+
+**Discovery (`test_discover.py`)**
 - Discovery of supported file types (`.txt`, `.md`)
 - Unsupported files being correctly ignored
 - Empty directories returning no results
 - Nested directories being searched recursively
 - Invalid directory paths raising appropriate errors
 
+**Extraction (`test_extract.py`)**
+- Reading a file's exact text content
+- Reading an empty file
+- Missing files and directories raising the correct built-in errors
+- Files with invalid encoding raising a clear custom error
+
 ## Roadmap
 
 **DONE**
 - Document discovery and metadata collection (local files, `.txt`/`.md`)
 - Recursive directory search
-- Invalid input handling
-- Automated test suite
+- Invalid input handling for discovery
+- Text extraction from individual files
+- Text extraction error handling (missing files, bad encoding)
+- Automated test suite for both discovery and extraction
 
 **IN PROGRESS**
-- (nothing currently in progress)
+- Connecting discovery and extraction into a single pipeline (skip unreadable files, keep going)
 
 **PLANNED**
-- Text extraction from discovered documents
 - Text processing (tokenization, normalization)
 - Index construction
 - Basic search functionality
@@ -132,3 +162,8 @@ Tests cover:
 - How file structure works.
 - Using `pathlib` to extract information about a particular directory
 - Automated tests in python using pytest
+
+**Day - 2**
+- How try/except works in python
+- How to write and read a file using pathlib
+- Separation of Concerns
