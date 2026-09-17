@@ -39,7 +39,14 @@ No text extraction, indexing, or search functionality exists yet.
 
 No indexing or search functionality exists yet. Discovery and extraction are not yet connected into a single pipeline.
 
-## Architecture
+**Day 3 — Pipeline (Discovery + Extraction)**
+
+- `load_documents(folder_path)` discovers documents and extracts their content in one call
+- files that fail extraction (e.g. invalid encoding) are skipped
+- Each document result includes its content ( or`None`) and an `extraction_error` field explaining any failure
+- Fully covered by an automated test suite
+
+No text processing (tokenization, normalization), indexing, or search functionality exists yet.
 
 ## Architecture
 
@@ -57,7 +64,12 @@ Day 2 added a second, independent function, `extract_text(file_path)`, that:
 2. Relies on Python's built-in file-reading errors for missing files/directories
 3. Raises a clear error if the file can't be decoded as text
 
-These two functions are not yet connected — that's planned for the next stage.
+Day 3 connected the two with `load_documents(folder_path)`, which:
+
+1. Calls `discover_documents()` to find candidate files
+2. Calls `extract_text()` on each one
+3. Adds `content` and `extraction_error` fields to each document's record
+4. Skips files that fail extraction instead of stopping the whole run
 
 No classes, no external frameworks — just plain functions and Python's standard library.
 
@@ -74,9 +86,11 @@ personal-search-engine/
 ├── requirements.txt        # Python package dependencies
 ├── discover.py             # Document discovery logic
 ├── extract.py              # Text extraction logic
+├── pipeline.py             # Combines discovery + extraction
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
-└── example_documents/      # Sample files used to demo discover.py / extract.py
+├── test_pipeline.py        # Automated tests for pipeline.py
+└── example_documents/      # Sample files used to demo the pipeline
 ```
 
 ## Setup
@@ -100,15 +114,13 @@ personal-search-engine/
 
 ## Usage
 
-Run the discovery script against the included example folder:
+Run the full pipeline against the included example folder:
 
 ```bash
-python3 discover.py
+python3 pipeline.py
 ```
 
-This will print a list of discovered documents (from `example_documents/`), each with its path, filename, extension, size, and last modified time.
-
-To scan a different folder, edit the folder path passed to `discover_documents()` in `discover.py`.
+This discovers all supported documents in `example_documents/`, extracts their text content, and prints each document's name along with any extraction error encountered.
 
 **Known limitation:** Running discovery against a folder that contains this project's own `venv/` or `.git/` directories (e.g. the project root itself) will also pick up unrelated files from those folders, since recursive search doesn't currently exclude them. Point it at a dedicated documents folder to avoid this.
 
@@ -135,6 +147,11 @@ Tests cover:
 - Missing files and directories raising the correct built-in errors
 - Files with invalid encoding raising a clear custom error
 
+**Pipeline (`test_pipeline.py`)**
+- Successfully extracted documents include their content
+- Failed extractions are recorded with an error instead of crashing
+- One bad file doesn't prevent other files from being processed
+
 ## Roadmap
 
 **DONE**
@@ -143,10 +160,8 @@ Tests cover:
 - Invalid input handling for discovery
 - Text extraction from individual files
 - Text extraction error handling (missing files, bad encoding)
-- Automated test suite for both discovery and extraction
-
-**IN PROGRESS**
-- Connecting discovery and extraction into a single pipeline (skip unreadable files, keep going)
+- Combined discovery + extraction pipeline with graceful failure handling
+- Automated test suite across discovery, extraction, and pipeline
 
 **PLANNED**
 - Text processing (tokenization, normalization)
@@ -167,3 +182,7 @@ Tests cover:
 - How try/except works in python
 - How to write and read a file using pathlib
 - Separation of Concerns
+
+**Day - 3**
+- combining two files and their functions
+- python shell
