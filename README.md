@@ -48,6 +48,16 @@ No indexing or search functionality exists yet. Discovery and extraction are not
 
 No text processing (tokenization, normalization), indexing, or search functionality exists yet.
 
+**Day 4 — Text Processing**
+
+- `tokenize(text)` converts raw text into a clean list of lowercase words
+- Strips leading/trailing punctuation from each word without touching internal punctuation (e.g. contractions)
+- Filters out empty results (e.g. from tokens that were pure punctuation)
+- `load_documents()` now includes a `tokens` field for each successfully extracted document
+- Fully covered by an automated test suite
+
+No indexing or search functionality exists yet.
+
 ## Architecture
 
 Day 1 built a single function, `discover_documents(folder_path)`, that:
@@ -73,6 +83,15 @@ Day 3 connected the two with `load_documents(folder_path)`, which:
 
 No classes, no external frameworks — just plain functions and Python's standard library.
 
+Day 4 added a third function, `tokenize(text)`, that:
+
+1. Splits text into words on whitespace
+2. Strips leading/trailing punctuation from each word
+3. Lowercases every word
+4. Filters out any resulting empty tokens
+
+`load_documents()` now calls `tokenize()` on successfully extracted content, adding a `tokens` field to each document. When extraction fails, `tokens` is set to `None`, consistent with `content`.
+
 ## Technology Stack
 
 - **Python 3** — standard library (`pathlib`) is sufficient for file discovery and metadata; no external dependencies needed for this part of the project
@@ -86,9 +105,11 @@ personal-search-engine/
 ├── requirements.txt        # Python package dependencies
 ├── discover.py             # Document discovery logic
 ├── extract.py              # Text extraction logic
-├── pipeline.py             # Combines discovery + extraction
+├── process.py              # Text tokenization/processing logic
+├── pipeline.py             # Combines discovery + extraction + processing
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
+├── test_process.py         # Automated tests for process.py
 ├── test_pipeline.py        # Automated tests for pipeline.py
 └── example_documents/      # Sample files used to demo the pipeline
 ```
@@ -148,9 +169,16 @@ Tests cover:
 - Files with invalid encoding raising a clear custom error
 
 **Pipeline (`test_pipeline.py`)**
-- Successfully extracted documents include their content
-- Failed extractions are recorded with an error instead of crashing
+- Successfully extracted documents include their content and tokens
+- Failed extractions are recorded with an error instead of crashing (content and tokens both `None`)
 - One bad file doesn't prevent other files from being processed
+
+**Processing (`test_process.py`)**
+- Splitting text on whitespace
+- Stripping punctuation from words
+- Lowercasing words
+- Filtering out empty tokens
+- Handling empty input text
 
 ## Roadmap
 
@@ -161,10 +189,10 @@ Tests cover:
 - Text extraction from individual files
 - Text extraction error handling (missing files, bad encoding)
 - Combined discovery + extraction pipeline with graceful failure handling
-- Automated test suite across discovery, extraction, and pipeline
+- Text tokenization (splitting, punctuation stripping, lowercasing, empty-token filtering)
+- Automated test suite across discovery, extraction, processing, and pipeline
 
 **PLANNED**
-- Text processing (tokenization, normalization)
 - Index construction
 - Basic search functionality
 - Ranking of search results
@@ -186,3 +214,8 @@ Tests cover:
 **Day - 3**
 - combining two files and their functions
 - python shell
+
+**Day - 4**
+- Tokenization
+- Pythons in built string library 
+- String methods
