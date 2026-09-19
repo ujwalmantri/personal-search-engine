@@ -112,6 +112,14 @@ Day 5 added `build_index(documents)`, which:
 
 `main.py` ties everything together as the project's entry point — prompting for a folder path and running the complete pipeline end-to-end.
 
+Day 6 added `search(query, index)`, which:
+
+1. Tokenizes the query using the same `tokenize()` function used for documents
+2. Looks up each query word in the index, using `.get()` to safely handle words never seen before
+3. Computes the intersection of all matching document sets — a document must contain every query word to match
+
+`main.py` now chains all six stages together: prompt for a folder → discover → extract → tokenize → index → prompt for a query → search → display results.
+
 ## Technology Stack
 
 - **Python 3** — standard library (`pathlib`) is sufficient for file discovery and metadata; no external dependencies needed for this part of the project
@@ -128,12 +136,14 @@ personal-search-engine/
 ├── process.py              # Text tokenization/processing logic
 ├── pipeline.py             # Combines discovery + extraction + processing
 ├── index.py                # Inverted index construction
-├── main.py                 # Entry point: runs the full pipeline on a user-provided folder
+├── search.py               # Query-based document search
+├── main.py                 # Entry point: full interactive search tool
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
 ├── test_process.py         # Automated tests for process.py
 ├── test_pipeline.py        # Automated tests for pipeline.py
 ├── test_index.py           # Automated tests for index.py
+├── test_search.py          # Automated tests for search.py
 ├── test_main.py            # Automated tests for main.py
 └── example_documents/      # Sample files used to demo the pipeline
 ```
@@ -159,13 +169,14 @@ personal-search-engine/
 
 ## Usage
 
-Run the program and enter any folder path when prompted:
+Run the program, enter a folder to index, then enter a search query:
 
 ```bash
 python3 main.py
 ```
 
-Invalid paths are handled gracefully with a clear error message rather than crashing.
+
+Multi-word queries require every word to appear in a document to count as a match (e.g. "example markdown" only matches documents containing both words).
 
 **Known limitation:** Running against a folder that contains this project's own `venv/` or `.git/` directories (e.g. the project root itself) will also pick up unrelated files from those folders, since recursive search doesn't currently exclude them. Point it at a dedicated documents folder to avoid this.
 
@@ -209,8 +220,14 @@ Tests cover:
 - A word appearing in a single document maps only to that one
 - Documents with failed extraction (`tokens: None`) are skipped
 
+**Search (`test_search.py`)**
+- A single-word query returns all documents containing that word
+- A multi-word query only returns documents containing every word (AND-matching)
+- A query word absent from the index returns no results
+- An empty query returns no results
+
 **Main (`test_main.py`)**
-- Running the full program end-to-end with a simulated folder path produces the expected summary output
+- Running the full program end-to-end with a simulated folder path and search query produces the expected results
 
 ## Roadmap
 
@@ -224,11 +241,11 @@ Tests cover:
 - Text tokenization (splitting, punctuation stripping, lowercasing, empty-token filtering)
 - Inverted index construction
 - Runnable entry point (`main.py`) accepting any folder path
+- Search functionality with multi-word AND-matching
 - Automated test suite across all modules, including input/output-driven code
 
 **PLANNED**
-- Search functionality (querying the index with a search term)
-- Ranking of search results
+- Ranking of search results by relevance
 - Basic web page crawling and keyword search
 - Machine learning / NLP-based ranking improvements
 
@@ -257,3 +274,6 @@ Tests cover:
 - More about dictionaries and lists
 - continue and break
 - monkeypatch and lambda function
+
+**Day - 6**
+- Sets in python and operations

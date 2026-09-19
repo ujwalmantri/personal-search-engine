@@ -1,5 +1,6 @@
 from pipeline import load_documents
 from index import build_index
+from search import search
 
 def main():
     folder_path = input("Enter the folder path to search: ")
@@ -17,8 +18,15 @@ def main():
     print(f"\nDiscovered and processed {len(documents)} documents.")
     print(f"Index contains {len(index)} unique words.\n")
 
-    for word, paths in index.items():
-        print(f"{word}: {paths}")
+    query = input("Enter a search query: ")
+    results = search(query, index)
+
+    if results:
+        print(f"\nFound {len(results)} matching document(s):")
+        for path in results:
+            print(f"  - {path}")
+    else:
+        print("\nNo matching documents found.")
 
 if __name__ == "__main__":
     main()
