@@ -58,6 +58,16 @@ No text processing (tokenization, normalization), indexing, or search functional
 
 No indexing or search functionality exists yet.
 
+**Day 5 — Index Construction & Entry Point**
+
+- `build_index(documents)` builds an inverted index: a mapping from each word to the list of document paths containing it
+- Skips documents that failed extraction (`tokens: None`)
+- `main.py` provides a runnable entry point: prompts for a folder path, runs the full pipeline (discovery → extraction → tokenization → indexing), and prints a summary
+- Handles invalid folder paths with friendly error messages instead of crashing
+- Fully covered by an automated test suite, including tests for `input()`/`print()`-driven code
+
+No search interface or result ranking exists yet — the index can be built and inspected, but there's no way to query it with a search term.
+
 ## Architecture
 
 Day 1 built a single function, `discover_documents(folder_path)`, that:
@@ -92,6 +102,16 @@ Day 4 added a third function, `tokenize(text)`, that:
 
 `load_documents()` now calls `tokenize()` on successfully extracted content, adding a `tokens` field to each document. When extraction fails, `tokens` is set to `None`, consistent with `content`.
 
+Day 5 added `build_index(documents)`, which:
+
+1. Takes the list of documents produced by `load_documents()`
+2. Skips any document with `tokens: None`
+3. Builds a dictionary mapping each word to the list of document paths containing it
+
+`build_index()` is intentionally kept separate from `load_documents()` — it operates on the full collection of documents at once (unlike per-document steps like extraction/tokenization), so it's composed at the call site rather than merged into the pipeline function.
+
+`main.py` ties everything together as the project's entry point — prompting for a folder path and running the complete pipeline end-to-end.
+
 ## Technology Stack
 
 - **Python 3** — standard library (`pathlib`) is sufficient for file discovery and metadata; no external dependencies needed for this part of the project
@@ -107,10 +127,14 @@ personal-search-engine/
 ├── extract.py              # Text extraction logic
 ├── process.py              # Text tokenization/processing logic
 ├── pipeline.py             # Combines discovery + extraction + processing
+├── index.py                # Inverted index construction
+├── main.py                 # Entry point: runs the full pipeline on a user-provided folder
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
 ├── test_process.py         # Automated tests for process.py
 ├── test_pipeline.py        # Automated tests for pipeline.py
+├── test_index.py           # Automated tests for index.py
+├── test_main.py            # Automated tests for main.py
 └── example_documents/      # Sample files used to demo the pipeline
 ```
 
@@ -135,15 +159,15 @@ personal-search-engine/
 
 ## Usage
 
-Run the full pipeline against the included example folder:
+Run the program and enter any folder path when prompted:
 
 ```bash
-python3 pipeline.py
+python3 main.py
 ```
 
-This discovers all supported documents in `example_documents/`, extracts their text content, and prints each document's name along with any extraction error encountered.
+Invalid paths are handled gracefully with a clear error message rather than crashing.
 
-**Known limitation:** Running discovery against a folder that contains this project's own `venv/` or `.git/` directories (e.g. the project root itself) will also pick up unrelated files from those folders, since recursive search doesn't currently exclude them. Point it at a dedicated documents folder to avoid this.
+**Known limitation:** Running against a folder that contains this project's own `venv/` or `.git/` directories (e.g. the project root itself) will also pick up unrelated files from those folders, since recursive search doesn't currently exclude them. Point it at a dedicated documents folder to avoid this.
 
 ## Testing
 
@@ -180,6 +204,14 @@ Tests cover:
 - Filtering out empty tokens
 - Handling empty input text
 
+**Index (`test_index.py`)**
+- A word appearing in multiple documents is correctly mapped to all of them
+- A word appearing in a single document maps only to that one
+- Documents with failed extraction (`tokens: None`) are skipped
+
+**Main (`test_main.py`)**
+- Running the full program end-to-end with a simulated folder path produces the expected summary output
+
 ## Roadmap
 
 **DONE**
@@ -190,11 +222,12 @@ Tests cover:
 - Text extraction error handling (missing files, bad encoding)
 - Combined discovery + extraction pipeline with graceful failure handling
 - Text tokenization (splitting, punctuation stripping, lowercasing, empty-token filtering)
-- Automated test suite across discovery, extraction, processing, and pipeline
+- Inverted index construction
+- Runnable entry point (`main.py`) accepting any folder path
+- Automated test suite across all modules, including input/output-driven code
 
 **PLANNED**
-- Index construction
-- Basic search functionality
+- Search functionality (querying the index with a search term)
 - Ranking of search results
 - Basic web page crawling and keyword search
 - Machine learning / NLP-based ranking improvements
@@ -219,3 +252,8 @@ Tests cover:
 - Tokenization
 - Pythons in built string library 
 - String methods
+
+**Day - 5**
+- More about dictionaries and lists
+- continue and break
+- monkeypatch and lambda function
