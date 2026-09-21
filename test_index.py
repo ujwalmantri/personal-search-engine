@@ -8,7 +8,7 @@ def test_word_appears_in_multiple_documents():
 
     index = build_index(documents)
 
-    assert index["hello"] == ["doc1.txt", "doc2.txt"]
+    assert index["hello"] == {"doc1.txt": 1, "doc2.txt":1}
 
 def test_word_appears_single_document():
     documents = [
@@ -18,7 +18,7 @@ def test_word_appears_single_document():
 
     index = build_index(documents)
 
-    assert index["world"] == ["doc1.txt"]
+    assert index["world"] == {"doc1.txt":1}
 
 def test_skips_documents_with_none_tokens():
     documents = [
@@ -28,4 +28,4 @@ def test_skips_documents_with_none_tokens():
 
     index = build_index(documents)
 
-    assert index == {"hello": ["doc1.txt"]}
+    assert index == {"hello": {"doc1.txt":1}}

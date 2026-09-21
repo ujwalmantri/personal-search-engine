@@ -23,8 +23,8 @@ def main():
 
     if results:
         print(f"\nFound {len(results)} matching document(s):")
-        for path in results:
-            print(f"  - {path}")
+        for path, score in results:
+            print(f"  - {path} (score: {score})")
     else:
         print("\nNo matching documents found.")
 

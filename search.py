@@ -1,4 +1,5 @@
 from process import tokenize
+from rank import rank
 
 def search(query, index):
     query_words = tokenize(query)
@@ -8,14 +9,15 @@ def search(query, index):
 
     matching_sets = []
     for word in query_words:
-        paths = index.get(word, [])
-        matching_sets.append(set(paths))
+        doc_counts = index.get(word, {})
+        matching_sets.append(set(doc_counts.keys()))
 
     result = matching_sets[0]
     for s in matching_sets[1:]:
         result = result & s
 
-    return list(result)
+    ranked_results = rank(query_words, result, index)
+    return ranked_results
 
 if __name__ == "__main__":
     from pipeline import load_documents

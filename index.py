@@ -1,3 +1,5 @@
+from collections import Counter
+
 def build_index(documents):
     index = {}
 
@@ -5,10 +7,12 @@ def build_index(documents):
         if doc["tokens"] is None:
             continue
 
-        for token in doc["tokens"]:
-            if token not in index:
-                index[token] = []
-            index[token].append(doc["path"])
+        word_counts = Counter(doc["tokens"])
+
+        for word, count in word_counts.items():
+            if word not in index:
+                index[word] = {}
+            index[word][doc["path"]] = count
 
     return index
 

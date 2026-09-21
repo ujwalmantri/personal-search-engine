@@ -68,6 +68,22 @@ No indexing or search functionality exists yet.
 
 No search interface or result ranking exists yet — the index can be built and inspected, but there's no way to query it with a search term.
 
+**Day 6 — Search**
+
+- `search(query, index)` finds documents matching a query using the inverted index
+- Multi-word queries require ALL words to be present (AND-matching), using set intersection
+- Query text is tokenized the same way documents are, ensuring consistent matching
+- `main.py` now prompts for a search query after building the index, and prints matching documents
+- Fully covered by an automated test suite
+
+**Day 7 — Ranking**
+
+- The index now stores term frequency: `word -> {document_path: count}`, not just which documents contain a word
+- `rank(query_words, matching_paths, index)` scores each matching document by total term frequency summed across all query words
+- `search()` now automatically ranks its results, returning a list of `(path, score)` tuples sorted by relevance, highest first
+- `main.py` displays each result's relevance score
+- Fully covered by an automated test suite
+
 ## Architecture
 
 Day 1 built a single function, `discover_documents(folder_path)`, that:
@@ -120,6 +136,15 @@ Day 6 added `search(query, index)`, which:
 
 `main.py` now chains all six stages together: prompt for a folder → discover → extract → tokenize → index → prompt for a query → search → display results.
 
+Day 7 restructured the index to store term frequency (`word -> {document_path: count}` instead of just a list of paths), and added `rank(query_words, matching_paths, index)`, which:
+
+1. Sums each matching document's term frequency across all query words
+2. Sorts documents by that combined score, highest first
+
+`search()` now calls `rank()` automatically, returning a list of `(path, score)` tuples instead of plain paths.
+
+`main.py` now chains all seven stages together: prompt for a folder → discover → extract → tokenize → index → prompt for a query → search (with ranking) → display results with scores.
+
 ## Technology Stack
 
 - **Python 3** — standard library (`pathlib`) is sufficient for file discovery and metadata; no external dependencies needed for this part of the project
@@ -135,8 +160,9 @@ personal-search-engine/
 ├── extract.py              # Text extraction logic
 ├── process.py              # Text tokenization/processing logic
 ├── pipeline.py             # Combines discovery + extraction + processing
-├── index.py                # Inverted index construction
+├── index.py                # Inverted index construction (with term frequency)
 ├── search.py               # Query-based document search
+├── rank.py                 # Relevance scoring and ranking
 ├── main.py                 # Entry point: full interactive search tool
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
@@ -144,6 +170,7 @@ personal-search-engine/
 ├── test_pipeline.py        # Automated tests for pipeline.py
 ├── test_index.py           # Automated tests for index.py
 ├── test_search.py          # Automated tests for search.py
+├── test_rank.py            # Automated tests for rank.py
 ├── test_main.py            # Automated tests for main.py
 └── example_documents/      # Sample files used to demo the pipeline
 ```
@@ -176,7 +203,7 @@ python3 main.py
 ```
 
 
-Multi-word queries require every word to appear in a document to count as a match (e.g. "example markdown" only matches documents containing both words).
+Multi-word queries require every word to appear in a document to count as a match. Results are ranked by combined term frequency, highest scoring first.
 
 **Known limitation:** Running against a folder that contains this project's own `venv/` or `.git/` directories (e.g. the project root itself) will also pick up unrelated files from those folders, since recursive search doesn't currently exclude them. Point it at a dedicated documents folder to avoid this.
 
@@ -219,18 +246,23 @@ Tests cover:
 - A word appearing in multiple documents is correctly mapped to all of them
 - A word appearing in a single document maps only to that one
 - Documents with failed extraction (`tokens: None`) are skipped
-
 **Search (`test_search.py`)**
 - A single-word query returns all documents containing that word
 - A multi-word query only returns documents containing every word (AND-matching)
 - A query word absent from the index returns no results
 - An empty query returns no results
 
+**Rank (`test_rank.py`)**
+- Documents are ranked by total term frequency across query words, highest first
+- Scores correctly sum across multiple query words
+- No matching documents returns an empty result
+
 **Main (`test_main.py`)**
-- Running the full program end-to-end with a simulated folder path and search query produces the expected results
+- Running the full program end-to-end with a simulated folder path and search query produces the expected ranked results
 
 ## Roadmap
 
+**DONE**
 **DONE**
 - Document discovery and metadata collection (local files, `.txt`/`.md`)
 - Recursive directory search
@@ -239,13 +271,14 @@ Tests cover:
 - Text extraction error handling (missing files, bad encoding)
 - Combined discovery + extraction pipeline with graceful failure handling
 - Text tokenization (splitting, punctuation stripping, lowercasing, empty-token filtering)
-- Inverted index construction
+- Inverted index construction with term frequency
 - Runnable entry point (`main.py`) accepting any folder path
 - Search functionality with multi-word AND-matching
+- Ranking search results by term frequency
 - Automated test suite across all modules, including input/output-driven code
 
 **PLANNED**
-- Ranking of search results by relevance
+- TF-IDF-based ranking (accounting for how common/rare a word is across all documents)
 - Basic web page crawling and keyword search
 - Machine learning / NLP-based ranking improvements
 
@@ -277,3 +310,7 @@ Tests cover:
 
 **Day - 6**
 - Sets in python and operations
+
+**Day - 7**
+- Term frequency calculations
+- sorted() and use of lambda function in it.(key=lambda item:item[1])
