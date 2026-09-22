@@ -84,6 +84,20 @@ No search interface or result ranking exists yet — the index can be built and 
 - `main.py` displays each result's relevance score
 - Fully covered by an automated test suite
 
+**Day 8 — TF-IDF Ranking**
+
+- Ranking now uses TF-IDF (term frequency × inverse document frequency) instead of raw term frequency alone
+- `compute_idf(word, index, total_documents)` scores how rare a word is across the whole document collection — common words (appearing in every document) score 0 and contribute nothing to ranking
+- `rank()` now requires the total document count to compute IDF correctly
+- Fully covered by an automated test suite with hand-verified expected scores
+
+**Day 9 — Web Page Fetching**
+
+- `fetch_page(url)` retrieves a webpage's raw HTML using the `requests` library
+- Raises clear errors for network failures (invalid domains) and HTTP error responses (e.g. 404s), via `raise_for_status()`
+- `extract_text_from_html(html)` uses `BeautifulSoup` to strip HTML tags and return clean, properly-spaced text
+- Fully covered by an automated test suite, including simulated network responses (no real network calls during testing)
+
 ## Architecture
 
 Day 1 built a single function, `discover_documents(folder_path)`, that:
@@ -145,10 +159,24 @@ Day 7 restructured the index to store term frequency (`word -> {document_path: c
 
 `main.py` now chains all seven stages together: prompt for a folder → discover → extract → tokenize → index → prompt for a query → search (with ranking) → display results with scores.
 
+Day 8 replaced plain term frequency with TF-IDF scoring:
+
+1. `compute_idf(word, index, total_documents)` measures how rare a word is across the whole collection — common words score close to 0, rare words score higher
+2. `rank()` now multiplies each word's term frequency by its IDF, summing across all query words, for a more meaningful relevance score
+
+Day 9 added a separate, independent module for web content:
+
+1. `fetch_page(url)` makes an HTTP request and returns raw HTML, raising clear errors for connection failures or bad HTTP status codes
+2. `extract_text_from_html(html)` parses HTML with BeautifulSoup and returns clean text, ready for the same `tokenize()` function used for local documents
+
+Web fetching is not yet wired into the existing pipeline/index/search system — that connection is planned for a future stage.
+
 ## Technology Stack
 
 - **Python 3** — standard library (`pathlib`) is sufficient for file discovery and metadata; no external dependencies needed for this part of the project
 - **pytest** — for writing and running automated tests using plain functions, without requiring class-based test structure
+- **requests** — for making HTTP requests to fetch web pages
+- **beautifulsoup4** — for parsing HTML and extracting clean text content
 
 ## Project Structure
 
@@ -162,7 +190,8 @@ personal-search-engine/
 ├── pipeline.py             # Combines discovery + extraction + processing
 ├── index.py                # Inverted index construction (with term frequency)
 ├── search.py               # Query-based document search
-├── rank.py                 # Relevance scoring and ranking
+├── rank.py                 # TF-IDF relevance scoring and ranking
+├── web.py                  # Web page fetching and HTML text extraction
 ├── main.py                 # Entry point: full interactive search tool
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
@@ -171,6 +200,7 @@ personal-search-engine/
 ├── test_index.py           # Automated tests for index.py
 ├── test_search.py          # Automated tests for search.py
 ├── test_rank.py            # Automated tests for rank.py
+├── test_web.py             # Automated tests for web.py
 ├── test_main.py            # Automated tests for main.py
 └── example_documents/      # Sample files used to demo the pipeline
 ```
@@ -260,9 +290,13 @@ Tests cover:
 **Main (`test_main.py`)**
 - Running the full program end-to-end with a simulated folder path and search query produces the expected ranked results
 
+**Web (`test_web.py`)**
+- HTML is correctly converted to clean, space-separated text
+- Fetching a page returns its raw text content (simulated response, no real network call)
+- An error HTTP status (e.g. 404) raises an exception (simulated response, no real network call)
+
 ## Roadmap
 
-**DONE**
 **DONE**
 - Document discovery and metadata collection (local files, `.txt`/`.md`)
 - Recursive directory search
@@ -274,12 +308,16 @@ Tests cover:
 - Inverted index construction with term frequency
 - Runnable entry point (`main.py`) accepting any folder path
 - Search functionality with multi-word AND-matching
-- Ranking search results by term frequency
-- Automated test suite across all modules, including input/output-driven code
+- TF-IDF-based ranking of search results
+- Web page fetching and HTML text extraction (standalone, not yet integrated)
+- Automated test suite across all modules, including input/output-driven and network-dependent code
+
+**IN PROGRESS**
+- (nothing currently in progress)
 
 **PLANNED**
-- TF-IDF-based ranking (accounting for how common/rare a word is across all documents)
-- Basic web page crawling and keyword search
+- Crawling: following links across multiple web pages
+- Integrating fetched web pages into the existing indexing/search pipeline
 - Machine learning / NLP-based ranking improvements
 
 ## Learning
