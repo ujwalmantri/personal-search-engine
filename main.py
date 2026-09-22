@@ -19,7 +19,7 @@ def main():
     print(f"Index contains {len(index)} unique words.\n")
 
     query = input("Enter a search query: ")
-    results = search(query, index)
+    results = search(query, index, len(documents))
 
     if results:
         print(f"\nFound {len(results)} matching document(s):")

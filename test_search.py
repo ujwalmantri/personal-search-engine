@@ -1,12 +1,13 @@
+import math
 from search import search 
 
 def test_single_word_query():
     index = {
-        "hello": {"doc1.txt":1, "doc2.txt":1},
-        "world": {"doc1.txt":1},
+        "hello": {"doc1.txt": 1, "doc2.txt": 1},
+        "world": {"doc1.txt": 1},
     }
 
-    results = search("hello", index)
+    results = search("hello", index, total_documents=2)
 
     paths = {path for path, score in results}
 
@@ -17,13 +18,17 @@ def test_single_word_query():
 
 def test_multi_word_query_requires_all_words():
     index = {
-        "hello": {"doc1.txt":1, "doc2.txt":1},
-        "world": {"doc1.txt":1},
+        "hello": {"doc1.txt": 1, "doc2.txt": 1},
+        "world": {"doc1.txt": 1},
     }
 
-    results = search("hello world", index)
+    results = search("hello world", index, total_documents=2)
 
-    assert results == [("doc1.txt",2)]
+    idf_hello = math.log(2/2)
+    idf_world = math.log(2/1)
+    expected_score = (1 * idf_hello) + (1 * idf_world)
+
+    assert results == [("doc1.txt", expected_score)]
 
 def test_word_not_in_index_returns_empty():
     index = {
@@ -31,7 +36,7 @@ def test_word_not_in_index_returns_empty():
         "world": {"doc1.txt":1},
     }
 
-    results = search("goodbye", index)
+    results = search("goodbye", index, total_documents=2)
 
     assert results == []
 
@@ -41,6 +46,6 @@ def test_empty_query_returns_empty():
         "world": ["doc1.txt"],
     }
 
-    results = search("", index)
+    results = search("", index, total_documents=2)
 
     assert results == []
