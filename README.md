@@ -98,6 +98,15 @@ No search interface or result ranking exists yet — the index can be built and 
 - `extract_text_from_html(html)` uses `BeautifulSoup` to strip HTML tags and return clean, properly-spaced text
 - Fully covered by an automated test suite, including simulated network responses (no real network calls during testing)
 
+**Day 10 — Web Crawling**
+
+- `extract_links(html, base_url)` finds all links on a page and resolves them to absolute, fetchable URLs
+- `normalize_url(url)` strips URL fragments so the same page isn't counted or crawled twice under different fragment variations
+- `crawl(start_url, max_pages, max_depth, delay)` follows links breadth-first from a starting page, respecting page count and depth limits, avoiding revisits, skipping broken pages without stopping the crawl, and pausing between requests
+- Fully covered by an automated test suite simulating multi-page sites without real network calls
+
+The crawler collects web pages independently — it is not yet connected to the indexing/search system, so crawled pages cannot currently be searched.
+
 ## Architecture
 
 Day 1 built a single function, `discover_documents(folder_path)`, that:
@@ -171,6 +180,21 @@ Day 9 added a separate, independent module for web content:
 
 Web fetching is not yet wired into the existing pipeline/index/search system — that connection is planned for a future stage.
 
+Day 10 added crawling capability, split across two files:
+
+`web.py` gained two new pieces:
+1. `extract_links(html, base_url)` finds every `<a href>` link and resolves it to an absolute URL using `urljoin`
+2. `normalize_url(url)` strips fragments (e.g. `#section`) so equivalent URLs aren't treated as distinct pages
+
+`crawler.py` added `crawl(start_url, max_pages, max_depth, delay)`, which:
+1. Maintains a queue of `(url, depth)` pairs, processed breadth-first
+2. Tracks visited URLs to prevent infinite loops from cyclical links
+3. Stops once `max_pages` is reached or `max_depth` is exceeded
+4. Catches and skips any page that fails to fetch, without stopping the crawl
+5. Pauses `delay` seconds between requests to avoid overloading servers
+
+Crawling is intentionally kept separate from the local search pipeline (`pipeline.py`, `index.py`, `search.py`) for now — connecting the two is a planned future step.
+
 ## Technology Stack
 
 - **Python 3** — standard library (`pathlib`) is sufficient for file discovery and metadata; no external dependencies needed for this part of the project
@@ -191,7 +215,8 @@ personal-search-engine/
 ├── index.py                # Inverted index construction (with term frequency)
 ├── search.py               # Query-based document search
 ├── rank.py                 # TF-IDF relevance scoring and ranking
-├── web.py                  # Web page fetching and HTML text extraction
+├── web.py                  # Web page fetching, HTML text extraction, link handling
+├── crawler.py              # Multi-page web crawling
 ├── main.py                 # Entry point: full interactive search tool
 ├── test_discover.py        # Automated tests for discover.py
 ├── test_extract.py         # Automated tests for extract.py
@@ -201,6 +226,7 @@ personal-search-engine/
 ├── test_search.py          # Automated tests for search.py
 ├── test_rank.py            # Automated tests for rank.py
 ├── test_web.py             # Automated tests for web.py
+├── test_crawler.py         # Automated tests for crawler.py
 ├── test_main.py            # Automated tests for main.py
 └── example_documents/      # Sample files used to demo the pipeline
 ```
@@ -294,6 +320,12 @@ Tests cover:
 - HTML is correctly converted to clean, space-separated text
 - Fetching a page returns its raw text content (simulated response, no real network call)
 - An error HTTP status (e.g. 404) raises an exception (simulated response, no real network call)
+- Links on a page are correctly resolved to absolute URLs, including relative and fragment links
+
+**Crawler (`test_crawler.py`)**
+- Crawling stops once the page limit (`max_pages`) is reached
+- Crawling does not follow links beyond the depth limit (`max_depth`)
+- A page that fails to fetch is skipped without stopping the crawl for other pages
 
 ## Roadmap
 
@@ -309,15 +341,13 @@ Tests cover:
 - Runnable entry point (`main.py`) accepting any folder path
 - Search functionality with multi-word AND-matching
 - TF-IDF-based ranking of search results
-- Web page fetching and HTML text extraction (standalone, not yet integrated)
-- Automated test suite across all modules, including input/output-driven and network-dependent code
-
-**IN PROGRESS**
-- (nothing currently in progress)
+- Web page fetching and HTML text extraction
+- Multi-page web crawling with depth/page limits and rate limiting
+- Automated test suite across all modules, including network-dependent code
 
 **PLANNED**
-- Crawling: following links across multiple web pages
-- Integrating fetched web pages into the existing indexing/search pipeline
+- Integrating crawled web pages into the existing indexing/search pipeline
+- Respecting `robots.txt` crawling rules
 - Machine learning / NLP-based ranking improvements
 
 ## Learning
@@ -352,3 +382,6 @@ Tests cover:
 **Day - 7**
 - Term frequency calculations
 - sorted() and use of lambda function in it.(key=lambda item:item[1])
+
+**Day 10**
+- Web Crawling
